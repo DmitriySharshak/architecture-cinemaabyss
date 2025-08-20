@@ -1,5 +1,19 @@
+# Build stage
+FROM openjdk:17-jdk-slim AS builder
+WORKDIR /app
+# Копируем только файлы, влияющие на зависимости, для кеширования слоёв
+COPY gradlew ./
+COPY gradle ./gradle
+COPY build.gradle.kts settings.gradle.kts ./
+# Копируем исходники
+COPY src ./src
+# Сборка без тестов
+RUN chmod +x ./gradlew && ./gradlew bootJar -x test
+
+# Runtime stage
 FROM openjdk:17-jdk-slim
 VOLUME /tmp
-ARG JAR_FILE=build/libs/events-0.0.1-SNAPSHOT.jar
-COPY ${JAR_FILE} events.jar
+WORKDIR /
+# Копируем собранный fat-jar
+COPY --from=builder /app/build/libs/*.jar /events.jar
 ENTRYPOINT ["java", "-jar", "/events.jar"]
