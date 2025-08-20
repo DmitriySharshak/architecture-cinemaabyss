@@ -4,7 +4,7 @@ WORKDIR /app
 # Копируем только файлы, влияющие на зависимости, для кеширования слоёв
 COPY gradlew ./
 COPY gradle ./gradle
-COPY build.gradle.kts settings.gradle.kts ./
+COPY build.gradle settings.gradle ./
 # Копируем исходники
 COPY src ./src
 # Сборка без тестов
