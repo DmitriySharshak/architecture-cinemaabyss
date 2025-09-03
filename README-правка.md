@@ -260,10 +260,23 @@ npm run test:docker
 
 3. Проверьте топики Kafka и сообщения через Kafka UI по адресу http://localhost:8090
 
-# Задание 2.
+# Задание 2
 
 ## Результаты тестов
 
 ![image](tests.png "tests.png")
 
 ![image](kafka_ui.png "kafka_ui.png")
+
+# Задание 4
+
+![image](tests_kubernetes.png "tests_kubernetes.png")
+
+Чтобы заработало надо выполнить
+
+```console
+NODE_IP=$(hostname -I | awk '{print $1}')
+echo "$NODE_IP cinemaabyss.example.com" | sudo tee -a /etc/hosts
+```
+
+Возможно, это какая-то особенность microk8s, по-другому настроить не получилось.
