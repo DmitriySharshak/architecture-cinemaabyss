@@ -11,6 +11,17 @@ MOVIES_SERVICE_URL = os.getenv("MOVIES_SERVICE_URL", "http://movies-service:8081
 GRADUAL_MIGRATION = os.getenv("GRADUAL_MIGRATION", "false").lower() in {"1", "true", "yes", "on"}
 MOVIES_MIGRATION_PERCENT = int(os.getenv("MOVIES_MIGRATION_PERCENT", "0"))
 
+HOP_BY_HOP_HEADERS = {
+    "connection",
+    "keep-alive",
+    "proxy-authenticate",
+    "proxy-authorization",
+    "te",
+    "trailers",
+    "transfer-encoding",
+    "upgrade",
+}
+
 
 monolyth_client: AsyncClient = None  # type: ignore
 movies_service_client: AsyncClient = None  # type: ignore
@@ -35,20 +46,29 @@ def choose_backend(path: str) -> AsyncClient:
     return monolyth_client
 
 
+def _clean_headers(headers: dict) -> dict:
+    return {
+        k: v
+        for k, v in headers.items()
+        if k.lower() not in HOP_BY_HOP_HEADERS
+        and k.lower() not in {"host", "content-length"}
+    }
+
+
 @app.api_route("/{full_path:path}", methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"])
 async def catch_all(full_path: str, request: Request):    
     client = choose_backend(full_path)
     url = request.url.path
     if request.url.query:
         url += f"?{request.url.query}"
-    print(f"{full_path=}")
     response = await client.request(request.method, url, 
                          content=await request.body(),
-                         headers=request.headers)
+                         headers=_clean_headers(dict(request.headers)))
+    resp_headers = _clean_headers(dict(response.headers))
     return Response(
         content=response.content,
         status_code=response.status_code,
-        headers=response.headers,
+        headers=resp_headers,
         media_type=response.headers.get("content-type"),
     )
 
