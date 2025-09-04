@@ -260,6 +260,9 @@ npm run test:docker
 
 3. Проверьте топики Kafka и сообщения через Kafka UI по адресу http://localhost:8090
 
+# Задание 1
+
+![image](diagrams/to-be/Container.svg)
 # Задание 2
 
 ## Результаты тестов
