@@ -263,6 +263,7 @@ npm run test:docker
 # Задание 1
 
 ![image](diagrams/to-be/Container.svg)
+
 # Задание 2
 
 ## Результаты тестов
@@ -283,3 +284,8 @@ echo "$NODE_IP cinemaabyss.example.com" | sudo tee -a /etc/hosts
 ```
 
 Возможно, это какая-то особенность microk8s, по-другому настроить не получилось.
+
+## Установка helm-чарта
+
+![image](helm_1.png "helm_1.png")
+![image](helm_2.png "helm_2.png")
