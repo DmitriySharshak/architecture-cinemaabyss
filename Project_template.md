@@ -72,7 +72,7 @@
 
 ### CI/CD
 
- В папке .github/worflows доработайте деплой новых сервисов proxy и events в docker-build-push.yml , чтобы api-tests при сборке отрабатывали корректно при отправке коммита в ваш репозиторий.
+В папке .github/worflows доработайте деплой новых сервисов proxy и events в docker-build-push.yml , чтобы api-tests при сборке отрабатывали корректно при отправке коммита в ваш репозиторий.
 
 Нужно доработать 
 ```yaml
@@ -113,11 +113,12 @@ jobs:
 Успешным результатом данного шага является "зеленая" сборка и "зеленые" тесты
 
 
+
 ### Proxy в Kubernetes
 
 #### Шаг 1
 Для деплоя в kubernetes необходимо залогиниться в docker registry Github'а.
-1. Создайте Personal Access Token (PAT) https://github.com/settings/tokens . Создавайте class с правом read:packages
+1. Создайте Personal Access Token (PAT) https://github.com/settings/tokens . Создавайте class с правом read:packages 
 2. В src/kubernetes/*.yaml (event-service, monolith, movies-service и proxy-service)  отредактируйте путь до ваших образов 
 ```bash
  spec:
@@ -125,10 +126,13 @@ jobs:
       - name: events-service
         image: ghcr.io/ваш логин/имя репозитория/events-service:latest
 ```
-3. Добавьте в секрет src/kubernetes/dockerconfigsecret.yaml в поле
+3. Добавьте в секрет (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) src/kubernetes/dockerconfigsecret.yaml в поле
 ```bash
  .dockerconfigjson: значение в base64 файла ~/.docker/config.json
 ```
+
+echo -n KonstantinBalin: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 | base64
+S29uc3RhbnRpbkJhbGluOmdocF9HdmlaQTdjc21CWnA1V1ZCSVV0bTduMHJzOXFKcnEwUWtKNWg=
 
 4. Если в ~/.docker/config.json нет значения для аутентификации
 ```json
@@ -166,6 +170,7 @@ cat .docker/config.json | base64
 ```
 
 #### Шаг 2
+kubectl create deployment my-app --image=nginx
 
   Доработайте src/kubernetes/event-service.yaml и src/kubernetes/proxy-service.yaml
 
@@ -209,6 +214,10 @@ cat .docker/config.json | base64
   kubectl -n cinemaabyss logs имя_пода (например - kafka-0)
   ```
 
+  ```bash
+  kubectl -n cinemaabyss logs movies-service-6dc6b94c5f-n2hxj    
+  ```
+
   5. Разверните монолит:
   ```bash
   kubectl apply -f src/kubernetes/monolith.yaml
@@ -225,7 +234,7 @@ cat .docker/config.json | base64
 
   После запуска и поднятия подов вывод команды 
   ```bash
-  kubectl -n cinemaabyss get pod
+  kubectl -n cinemaabyss get pods
   ```
 
   Будет наподобие такого
@@ -257,6 +266,16 @@ cat .docker/config.json | base64
   ```bash
   kubectl apply -f src/kubernetes/ingress.yaml
   ```
+
+  ```bash
+  kubectl describe ingress cinemaabyss-ingress
+  ```
+
+  ```bash
+  kubectl get ingress -n cinemaabyss
+  kubectl describe ingress cinemaabyss-ingress -n cinemaabyss
+  ```
+
   9. Добавьте в /etc/hosts
   127.0.0.1 cinemaabyss.example.com
 
@@ -278,6 +297,9 @@ cat .docker/config.json | base64
 #### Шаг 3
 Добавьте сюда скриншота вывода при вызове https://cinemaabyss.example.com/api/movies и  скриншот вывода event-service после вызова тестов.
 
+
+[скриншот вывода](chttps://github.com/KonstantinBalin/architecture-cinemaabyss/diagrams/screenshot_3.png)
+[скриншот тестов](chttps://github.com/KonstantinBalin/architecture-cinemaabyss/diagrams/screenshot_4.png)
 
 # Задание 4
 Для простоты дальнейшего обновления и развертывания вам как архитектуру необходимо так же реализовать helm-чарты для прокси-сервиса и проверить работу 
