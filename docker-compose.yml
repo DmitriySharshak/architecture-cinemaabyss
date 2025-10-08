@@ -9,11 +9,16 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres_password
       POSTGRES_DB: cinemaabyss
+      POSTGRES_HOST_AUTH_METHOD: trust
+    command: >
+      postgres
+      -c hba_file=/etc/postgresql/pg_hba.conf
     ports:
       - "5432:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
       - ./src/database/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./pg_hba.conf:/etc/postgresql/pg_hba.conf
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
@@ -117,7 +122,7 @@ services:
       MOVIES_SERVICE_URL: http://movies-service:8081
       EVENTS_SERVICE_URL: http://events-service:8082
       GRADUAL_MIGRATION: "true"
-      MOVIES_MIGRATION_PERCENT: "50"
+      MOVIES_MIGRATION_PERCENT: "90"
     networks:
       - cinemaabyss-network
 
