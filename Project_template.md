@@ -374,7 +374,8 @@ minikube tunnel
 Потом вызовите 
 https://cinemaabyss.example.com/api/movies
 и приложите скриншот развертывания helm и вывода https://cinemaabyss.example.com/api/movies
-
+[скриншот вывода](chttps://github.com/KonstantinBalin/architecture-cinemaabyss/diagrams/screenshot_5.png)
+[скриншот тестов](chttps://github.com/KonstantinBalin/architecture-cinemaabyss/diagrams/screenshot_6.png)
 ## Удаляем все
 
 ```bash
