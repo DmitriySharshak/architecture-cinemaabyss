@@ -93,6 +93,9 @@ GitHub Actions для непрерывной интеграции и разве�
    ```bash
    docker-compose up -d
    ```
+   ```bash
+   docker compose up -d --build --force-recreate
+   ```
 
 После запуска сервисы доступны:
 - Monolith: http://localhost:8080
