@@ -1,0 +1,95 @@
+@startuml
+!includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/master/C4_Container.puml
+title Kinobezdna — Container Diagram
+
+Person(user, "User", "Пользователь, мобильная, веб, и смарт тв платформы.")
+
+System_Boundary(warmflix, "Kinobezdna Platform") {
+
+  ' === Core Gateway ===
+  Container(gateway, "API Gateway", "Nginx / Spring Cloud Gateway", "Единая точка входа. Проверяет JWT, маршрутизирует запросы к микросервисам и BFF")
+
+  ' === BFF Layer ===
+  Container(mobileBff, "Mobile BFF", "Go / Kotlin / Spring Boot", "Агрегирует и адаптирует данные под мобильное приложение, кеширование и фильтрация полей")
+  Container(webBff, "Web BFF", "Go / Kotlin / Spring Boot", "Агрегирует данные под Web интерфейс")
+  Container(tvBff, "Smart TV BFF", "Go / Kotlin / Spring Boot", "Формирует payload для Smart TV: карточки фильмов, трейлеры, подписки")
+
+  ' === Auth & Users ===
+  Container(auth, "Auth Service", "Go", "Регистрация, логин, refresh-токены, выдача JWT")
+  ContainerDb(auth_db, "Auth DB", "PostgreSQL", "Хранит пользователей, хэши паролей, refresh-токены")
+
+  Container(userService, "User Service", "Go", "Хранит профили пользователей, настройки, избранное")
+  ContainerDb(user_db, "User Profile DB", "PostgreSQL", "Профили пользователей, связи с подписками")
+
+  ' === Subscriptions & Payments ===
+  Container(subscriptionService, "Subscription Service", "Go", "Управление подписками пользователей, тарификацией")
+  ContainerDb(subscription_db, "Subscription DB", "PostgreSQL", "Информация о планах, тарифах, сроках")
+
+  Container(paymentService, "Payment Service", "Go", "Обработка платежей и взаимодействие с внешними платёжными системами")
+  ContainerDb(payment_db, "Payment DB", "PostgreSQL", "Транзакции, статусы, история оплат")
+
+  ' === Movie Metadata ===
+  Container(metadataService, "Movie Metadata Service", "Go", "Метаданные фильмов: описания, постеры, жанры, рейтинги")
+  ContainerDb(metadata_db, "Metadata DB", "PostgreSQL", "Каталог фильмов и сериалов")
+
+  ' === Streaming ===
+  Container(streaming, "Streaming Service", "Go + интеграции", "Доступ к видеоконтенту через внешние онлайн-кинотеатры (API интеграции)")
+
+  ' === Event Service & Kafka ===
+  Container(eventService, "Event Service", "Go ", "Сбор пользовательских событий (просмотры, лайки) и публикация в Kafka")
+  ContainerQueue(kafka, "Kafka", "Kafka", "Брокер сообщений для обмена событиями между сервисами")
+
+  ' === Object Storage ===
+  Container(storage, "S3 Storage", "MinIO / AWS S3", "Хранение обложек, трейлеров, пользовательских изображений")
+}
+
+' === External Systems ===
+System_Ext(paymentGateway, "External Payment Gateway")
+System_Ext(cinemaAPI, "External Cinema API", "Партнёрские онлайн-кинотеатры")
+System_Ext(reccomendSystem, "External Recommend System", "Внешняя рекомендательная система")
+
+' === Relationships ===
+Rel(user, gateway, "Отправляет запросы", "HTTPS / REST / JWT")
+
+' Gateway → BFF
+Rel(gateway, mobileBff, "Маршрутизирует мобильные запросы", "REST / JSON")
+Rel(gateway, webBff, "Маршрутизирует Web запросы", "REST / JSON")
+Rel(gateway, tvBff, "Маршрутизирует Smart TV запросы", "REST / JSON")
+
+' BFF → Core Services
+Rel(mobileBff, metadataService, "Запрашивает метаданные фильмов", "REST")
+Rel(mobileBff, subscriptionService, "Проверяет подписки пользователя", "REST")
+Rel(mobileBff, userService, "Получает профиль пользователя", "REST")
+
+Rel(webBff, metadataService, "Запрашивает метаданные фильмов", "REST")
+Rel(webBff, subscriptionService, "Проверяет подписки пользователя", "REST")
+Rel(webBff, userService, "Получает профиль пользователя", "REST")
+
+Rel(tvBff, metadataService, "Запрашивает метаданные фильмов", "REST")
+Rel(tvBff, subscriptionService, "Проверяет подписки пользователя", "REST")
+Rel(tvBff, userService, "Получает профиль пользователя", "REST")
+
+' Остальные связи
+Rel(gateway, auth, "Авторизация / refresh / JWT", "REST")
+Rel(gateway, paymentService, "Платежи", "REST")
+Rel(gateway, streaming, "Запросы на стриминг", "REST")
+Rel(gateway, eventService, "Отправка событий", "REST")
+
+Rel(auth, auth_db, "Читает/пишет", "JDBC")
+Rel(userService, user_db, "Читает/пишет", "JDBC")
+Rel(subscriptionService, subscription_db, "Читает/пишет", "JDBC")
+Rel(paymentService, payment_db, "Читает/пишет", "JDBC")
+Rel(metadataService, metadata_db, "Читает/пишет", "JDBC")
+
+Rel(auth, kafka, "Публикует USER_CREATED / USER_UPDATED")
+Rel(kafka, userService, "Слушает и обновляет профили")
+Rel(eventService, kafka, "Публикует USER_ACTION / MOVIE_VIEW")
+Rel(kafka, metadataService, "Обновляет статистику и рейтинги")
+
+Rel(streaming, cinemaAPI, "Интеграция с внешними кинотеатрами", "REST / API key")
+Rel(paymentService, paymentGateway, "Проводит оплату", "REST / Webhook")
+
+Rel(metadataService, storage, "Хранит постеры / трейлеры", "S3 API")
+Rel(metadataService, reccomendSystem, "Отправляет оценки по фильмам")
+
+@enduml
