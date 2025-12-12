@@ -1,0 +1,35 @@
+@startuml
+!include <C4/C4_Context.puml>
+!include <C4/C4_Container.puml>
+!include <C4/C4_Component.puml>
+
+Component(paymentSystem, "Платежная система", "")
+System_Boundary(app, "Монолит", "Основное приложение", "GoLang"){
+    Component(userManagement, "Управление пользователями", "GoLang")
+    Component(contentManagement, "Контент", "GoLang")
+    Component(billing, "Платежи", "GoLang")
+    Component(subscribes, "Подписки", "GoLang")
+    Component(contentMetadata, "Метаданные контента", "GoLang")
+}
+Component(db, "База данных", "PostgresSQL")
+Component(contentDistributor, "Онлайн-кинотеатры", "")
+Component(queue, "Очередь сообщений", "RabbitMQ")
+Component(recommendations, "Рекомендательная система", "")
+Component(client, "Девайс", "")
+
+
+Rel(billing, paymentSystem, "Передает транзакции на оплату")
+Rel(userManagement, queue, "Публикует запрос рекомендаций")
+Rel(queue, recommendations, "Передает запрос рекомендаций")
+Rel(recommendations, queue, "Отправляет список рекомендаций по запросу")
+Rel(queue, userManagement, "Передает список рекомендаций")
+Rel(userManagement, db, "Пишет и читает данные пользователей")
+Rel(contentManagement, db, "Пишет и читает данные фильмов и др. контента")
+Rel(billing, db, "Пишет и читает данные платежей")
+Rel(subscribes, db, "Пишет и читает данные подписок пользователей")
+Rel(contentMetadata, db, "Пишет и читает данные о контенте")
+
+Rel(client, contentManagement, "Запрашивает контент")
+Rel(contentManagement, contentDistributor, "Запрашивает контент")
+
+@enduml

@@ -1,0 +1,31 @@
+@startuml
+!include <C4/C4_Context.puml>
+!include <C4/C4_Container.puml>
+!include <C4/C4_Component.puml>
+
+
+System_Boundary(webApp, "Веб-приложение") {
+    Component(homeWebPage, "Стартовая страница и дашбоард", "React.js")
+    Component(userProfilePage, "Профиль пользователя", "React.js")
+    Component(paymentsPage, "Платежи пользователя", "React.js")
+}
+
+System_Boundary(clientApi, "Backend for frontend"){
+    Component(paymentsApi, "Payment API", "FastAPI")
+}
+
+Component(userManagement, "Управление пользователями", "FastAPI")
+Component(billingApp, "Биллинг", "")
+Component(billingDb, "База данных платежей для записи", PostgreSQL)
+Component(billingDbReplica, "База данных платежей для чтения", PostgreSQL)
+Component(eventProcessor, "Ивент процессор", "Apache Kafka")
+
+
+Rel(userManagement, eventProcessor, "Публикует события генерации инвойса по подписке", "Kafka Producer subscribes.events")
+Rel(eventProcessor, billingApp, "Читает события подписок", "Kafka Consumer subscribes.events")
+Rel(billingApp, billingDb, "Генерирует и обновляет инвойс на обновление подписки")
+Rel(paymentsPage, paymentsApi, "Получает список платежей пользователя", "HTTP/JSON")
+Rel(billingDb, billingDbReplica, "Реплицирует данные платежей")
+Rel(paymentsApi, billingDbReplica, "Получает данные платежей пользователя", "SQL")
+
+@enduml
