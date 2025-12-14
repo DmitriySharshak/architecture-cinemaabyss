@@ -1,5 +1,5 @@
 import random
-from fastapi import Request, APIRouter, Response
+from fastapi import Request, APIRouter, Response, status
 import httpx
 import os
 from dotenv import load_dotenv
@@ -10,19 +10,26 @@ MONOLITH_URL = os.getenv('MONOLITH_URL')
 MOVIES_SERVICE_URL= os.getenv('MOVIES_SERVICE_URL')
 MOVIES_MIGRATION_PERCENT = os.getenv('MOVIES_MIGRATION_PERCENT')
 
-router = APIRouter()
-monolith_requests_count = 0
-mircoservice_requests_count = 0
+movies_proxy_router = APIRouter()
+users_proxy_router = APIRouter()
+health_check_router = APIRouter()
+routers = [movies_proxy_router, users_proxy_router, health_check_router]
 
-@router.api_route("/movies/{path:path}", methods=["GET", "POST", "PUT", "DELETE", "PATCH"])
+
+@health_check_router.api_route("/health", methods=["GET"], status_code=status.HTTP_200_OK)
+async def health_check():
+    return {"status": True}
+
+@movies_proxy_router.api_route(
+        "/api/movies/{path:path}", 
+        methods=["GET", "POST", "PUT", "DELETE", "PATCH"],
+        status_code=status.HTTP_200_OK
+    )
 async def proxy_movies(path: str, request: Request):
-    global monolith_requests_count, mircoservice_requests_count
-    if settings.gradual_migration and random.randint(1, 100) <= int(MOVIES_MIGRATION_PERCENT):
-        base_url = settings.movies_service_url
-        mircoservice_requests_count +=1
+    if MOVIES_MIGRATION_PERCENT and random.randint(1, 100) <= int(MOVIES_MIGRATION_PERCENT):
+        base_url = MOVIES_SERVICE_URL
     else:
-        base_url = settings.monolith_url
-        monolith_requests_count += 1
+        base_url = MONOLITH_URL
     
     if path:
         target_url = f"{base_url}/api/movies/{path}"
@@ -30,8 +37,6 @@ async def proxy_movies(path: str, request: Request):
         target_url = f"{base_url}/api/movies"
     
     print(f"Target URL: {target_url}")
-    with open('/app/logs/requests.log', mode='a') as f:
-        f.write(f"[Total: monolith={monolith_requests_count}, microservice={mircoservice_requests_count}\n")
     
     async with httpx.AsyncClient() as client:
         response = await client.request(
@@ -46,3 +51,33 @@ async def proxy_movies(path: str, request: Request):
             status_code=response.status_code,
             headers=dict(response.headers)
         )
+    
+@users_proxy_router.api_route(
+        "/api/users/{path:path}", 
+        methods=["GET", "POST", "PUT", "DELETE", "PATCH"],
+        status_code=status.HTTP_200_OK
+    )
+async def proxy_users(path: str, request: Request):
+    
+    target_url = f"{MONOLITH_URL}/api/users{path}"
+    # if path:
+    #     target_url = f"{base_url}/api/movies/{path}"
+    # else:
+    #     target_url = f"{base_url}/api/movies"
+    
+    print(f"Target URL: {target_url}")
+    
+    async with httpx.AsyncClient() as client:
+        response = await client.request(
+            method=request.method,
+            url=target_url,
+            params=request.query_params,
+            content=await request.body()
+        )
+
+        return Response(
+            content=response.content,
+            status_code=response.status_code,
+            headers=dict(response.headers)
+        )
+    
