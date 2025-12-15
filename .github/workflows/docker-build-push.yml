@@ -134,3 +134,7 @@ jobs:
         run: |
           docker build -t postman-tests ./tests/postman
           docker run --rm postman-tests
+
+      - name: Stop services
+        if: always()
+        run: docker compose -f docker-compose.ci.yml down
