@@ -58,12 +58,10 @@ async def proxy_movies(path: str, request: Request):
         status_code=status.HTTP_200_OK
     )
 async def proxy_users(path: str, request: Request):
-    
-    target_url = f"{MONOLITH_URL}/api/users{path}"
-    # if path:
-    #     target_url = f"{base_url}/api/movies/{path}"
-    # else:
-    #     target_url = f"{base_url}/api/movies"
+    if path:
+        target_url = f"{MONOLITH_URL}/api/users/{path}"
+    else:
+        target_url = f"{MONOLITH_URL}/api/users"
     
     print(f"Target URL: {target_url}")
     
