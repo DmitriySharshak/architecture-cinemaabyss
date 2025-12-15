@@ -1,0 +1,151 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:14
+    container_name: cinemaabyss-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres_password
+      POSTGRES_DB: cinemaabyss
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./src/database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - cinemaabyss-network
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    container_name: cinemaabyss-zookeeper
+    ports:
+      - "2181:2181"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      - cinemaabyss-network
+
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: cinemaabyss-kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+    healthcheck:
+      test: kafka-broker-api-versions --bootstrap-server localhost:9092
+      interval: 5s
+      timeout: 10s
+      retries: 10
+    volumes:
+      - kafka-data:/var/lib/kafka/data
+    networks:
+      - cinemaabyss-network
+  kafka-init:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: cinemaabyss-kafka-init
+    depends_on:
+      kafka:
+        condition: service_healthy
+    volumes:
+      - ./scripts/kafka-init.sh:/tmp/kafka-init.sh:ro
+    entrypoint: ['/bin/bash', '/tmp/kafka-init.sh']
+    networks:
+      - cinemaabyss-network
+
+  # Monolith Service
+  monolith:
+    build:
+      context: ./src/monolith
+      dockerfile: Dockerfile
+    container_name: cinemaabyss-monolith
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    environment:
+      PORT: 8080
+      DB_CONNECTION_STRING: postgres://postgres:postgres_password@postgres:5432/cinemaabyss?sslmode=disable
+    networks:
+      - cinemaabyss-network
+
+  # Movies Microservice
+  movies-service:
+    build:
+      context: ./src/microservices/movies
+      dockerfile: Dockerfile
+    container_name: cinemaabyss-movies-service
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "8081:8081"
+    environment:
+      PORT: 8081
+      DB_CONNECTION_STRING: postgres://postgres:postgres_password@postgres:5432/cinemaabyss?sslmode=disable
+    networks:
+      - cinemaabyss-network
+
+  # Events Microservice
+  events-service:
+    build:
+      context: ./src/microservices/events
+      dockerfile: Dockerfile
+    container_name: cinemaabyss-events-service
+    depends_on:
+      kafka:
+        condition: service_healthy
+      postgres:
+        condition: service_started
+    ports:
+      - "8082:8082"
+    environment:
+      PORT: 8082
+      KAFKA_BROKERS: kafka:9092
+    networks:
+      - cinemaabyss-network
+
+  # Proxy Service (API Gateway)
+  proxy-service:
+    build:
+      context: ./src/microservices/proxy
+      dockerfile: Dockerfile
+    container_name: cinemaabyss-proxy-service
+    depends_on:
+      - monolith
+      - movies-service
+      - events-service
+    ports:
+      - "8000:8000"
+    environment:
+      PORT: 8000
+      MONOLITH_URL: http://monolith:8080
+      MOVIES_SERVICE_URL: http://movies-service:8081
+      EVENTS_SERVICE_URL: http://events-service:8082
+      GRADUAL_MIGRATION: "true"
+      MOVIES_MIGRATION_PERCENT: ${MOVIES_MIGRATION_PERCENT}
+    volumes:
+      - ./logs:/app/logs
+    networks:
+      - cinemaabyss-network
+
+networks:
+  cinemaabyss-network:
+    name: cinemaabyss-network
+    driver: bridge
