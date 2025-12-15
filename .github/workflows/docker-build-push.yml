@@ -136,7 +136,7 @@ jobs:
 
       - name:
         run: |
-          docker run --rm postman-tests --network cinemaabyss-network postman-tests
+          docker run --rm --network cinemaabyss-network postman-tests
 
       - name: Stop services
         if: always()
