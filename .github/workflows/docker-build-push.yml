@@ -133,8 +133,11 @@ jobs:
       - name: Build and run Api tests container
         run: |
           docker build -t postman-tests ./tests/postman
-          docker run --rm postman-tests
 
       - name: Stop services
         if: always()
         run: docker compose -f docker-compose.ci.yml down
+
+      - name:
+        run: |
+          docker run --rm postman-tests --network cinemaabyss-network postman-tests
