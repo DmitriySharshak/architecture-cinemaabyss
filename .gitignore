@@ -154,3 +154,9 @@ go.work
 
 # Postman tests reports
 tests/postman/reports/
+src/microservices/proxy/percentage_check_tests
+
+diagrams_c4/C4-PlantUML
+logs
+.venv
+.vscode

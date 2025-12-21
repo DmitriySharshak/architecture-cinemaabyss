@@ -5,7 +5,9 @@ global:
 
 # Image pull secrets
 imagePullSecrets:
-  dockerconfigjson: ewoJImF1dGhzIjogewoJCSJnaGNyLmlvIjogewoJCQkiYXV0aCI6
+  dockerconfigjson:
+    ewogICJhdXRocyI6IHsKICAgICJnaGNyLmlvIjogewogICAgICAidXNlcm5hbWUiOiAibWF5Zmxvd3dlciIsCiAgICAgICJwYXNzd29yZCI6ICJnaHBfWFpwc0hndlk0Z1JLM1p4RkI2ZHBLYTRwS2dGSHE1MjRPeFNrIiwKICAgICAgImVtYWlsIjogIm5vbmUiLAogICAgICAiYXV0aCI6ICJiV0Y1Wm14dmQzZGxjanBuYUhCZldGcHdjMGhuZGxrMFoxSkxNMXA0UmtJMlpIQkxZVFJ3UzJkR1NIRTFNalJQZUZOciIKICAgIH0KICB9Cn0K
+
 # Database configuration
 database:
   host: postgres
@@ -33,7 +35,7 @@ database:
 monolith:
   enabled: true
   image:
-    repository: ghcr.io/db-exp/cinemaabysstest/monolith
+    repository: ghcr.io/mayflowwer/architecture-cinemaabyss/monolith
     tag: latest
     pullPolicy: Always
   replicas: 1
@@ -53,7 +55,7 @@ monolith:
 proxyService:
   enabled: true
   image:
-    repository: ghcr.io/db-exp/cinemaabysstest/proxy-service
+    repository: ghcr.io/mayflowwer/architecture-cinemaabyss/proxy-service
     tag: latest
     pullPolicy: Always
   replicas: 1
@@ -68,12 +70,19 @@ proxyService:
     port: 80
     targetPort: 8000
     type: ClusterIP
+  env:
+    - name: MONOLITH_URL
+      value: "http://monolith.cinemaabyss.svc.cluster.local:8080"
+    - name: MOVIES_SERVICE_URL
+      value: "http://movies-service.cinemaabyss.svc.cluster.local:8081"
+    - name: "MOVIES_MIGRATION_PERCENT"
+      value: "100"
 
 # Movies service configuration
 moviesService:
   enabled: true
   image:
-    repository: ghcr.io/db-exp/cinemaabysstest/movies-service
+    repository: ghcr.io/mayflowwer/architecture-cinemaabyss/movies-service
     tag: latest
     pullPolicy: Always
   replicas: 1
@@ -93,7 +102,7 @@ moviesService:
 eventsService:
   enabled: true
   image:
-    repository: ghcr.io/db-exp/cinemaabysstest/events-service
+    repository: ghcr.io/mayflowwer/architecture-cinemaabyss/events-service
     tag: latest
     pullPolicy: Always
   replicas: 1

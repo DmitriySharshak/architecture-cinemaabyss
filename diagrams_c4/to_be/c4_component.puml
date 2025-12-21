@@ -1,0 +1,48 @@
+@startuml
+!include <C4/C4_Component.puml>
+
+System_Boundary(webApp, "Веб-приложение") {
+    Component(homeWebPage, "Стартовая страница и дашбоард", "React.js")
+    Component(userProfilePage, "Профиль пользователя", "React.js")
+    Component(paymentsPage, "Платежи пользователя", "React.js")
+    Component(videoCatalogPage, "Каталог фильмов и метаданные", "React.js")
+}
+
+System_Boundary(clientApi, "Backend for frontend") {
+    Component(userApi, "User API", "FastAPI / Go")
+    Component(paymentsApi, "Payment API", "FastAPI / Go")
+    Component(videoApi, "Video API", "FastAPI / Go")
+}
+
+System_Boundary(microservices, "Микросервисы") {
+    Component(userManagement, "Управление пользователями", "Go/FastAPI")
+    Component(paymentService, "Платежи и подписки", "Go/FastAPI")
+    Component(videoService, "Видео и метаданные", "Go/FastAPI")
+    Component(recommendationService, "Рекомендательная система", "REST API / сторонняя система")
+    Component(eventProcessor, "Event Processor / Kafka", "Apache Kafka")
+    
+    Component(paymentDb, "База платежей", "PostgreSQL")
+    Component(userDb, "База пользователей", "PostgreSQL")
+    Component(videoDb, "База видео и метаданных", "PostgreSQL")
+}
+
+Rel(homeWebPage, userApi, "HTTP/JSON", "REST")
+Rel(userProfilePage, userApi, "HTTP/JSON", "REST")
+Rel(paymentsPage, paymentsApi, "HTTP/JSON", "REST")
+Rel(videoCatalogPage, videoApi, "HTTP/JSON", "REST")
+
+Rel(userApi, userManagement, "HTTP/JSON")
+Rel(paymentsApi, paymentService, "HTTP/JSON")
+Rel(videoApi, videoService, "HTTP/JSON")
+
+Rel(userManagement, userDb, "SQL")
+Rel(paymentService, paymentDb, "SQL")
+Rel(videoService, videoDb, "SQL")
+
+Rel(paymentService, eventProcessor, "Публикует события платежей", "Kafka")
+Rel(eventProcessor, videoService, "Подписка на события", "Kafka Consumer")
+Rel(eventProcessor, userManagement, "Подписка на события", "Kafka Consumer")
+
+Rel(videoService, recommendationService, "REST API")
+Rel(userApi, recommendationService, "REST API (получение рекомендаций)")
+@enduml
