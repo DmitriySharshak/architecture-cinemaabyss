@@ -18,7 +18,17 @@ routers = [movies_proxy_router, users_proxy_router, health_check_router]
 
 @health_check_router.api_route("/health", methods=["GET"], status_code=status.HTTP_200_OK)
 async def health_check():
-    return {"status": True}
+    return {
+        "status": True
+        }
+
+@movies_proxy_router.api_route(
+        "/api/movies",
+        methods=["GET", "POST", "PUT", "DELETE", "PATCH"],
+        status_code=status.HTTP_200_OK
+        )
+async def proxy_movies_root(request : Request):
+    return await proxy_movies(path="", request=request)
 
 @movies_proxy_router.api_route(
         "/api/movies/{path:path}", 
@@ -51,6 +61,14 @@ async def proxy_movies(path: str, request: Request):
             status_code=response.status_code,
             headers=dict(response.headers)
         )
+
+@users_proxy_router.api_route(
+        "/api/users",
+        methods=["GET", "POST", "PUT", "DELETE", "PATCH"],
+        status_code=status.HTTP_200_OK
+        )
+async def proxy_users_root(request : Request):
+    return await proxy_users(path="", request=request)
     
 @users_proxy_router.api_route(
         "/api/users/{path:path}", 

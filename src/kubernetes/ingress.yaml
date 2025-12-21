@@ -59,4 +59,5 @@ spec:
               service:
                 name: events-service
                 port: 
-                  number: 8082
+                  number: 8082  
+  ingressClassName: nginx
