@@ -30,7 +30,7 @@ RUN addgroup -S javauser && \
 WORKDIR /app
 
 # Copy the built JAR from the builder stage
-COPY --from=builder /app/target/*.jar app.jar
+COPY --from=builder /app/target/events-service-1.0.0.jar app.jar
 
 # Set ownership of the application files to non-root user
 RUN chown -R javauser:javauser /app
@@ -39,14 +39,14 @@ RUN chown -R javauser:javauser /app
 USER javauser
 
 # Expose application port
-EXPOSE 8000
+EXPOSE 8082
 
 # Configure JVM options (optimized for containers)
 ENV JAVA_OPTS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -Djava.security.egd=file:/dev/./urandom"
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=60s --retries=3 \
-  CMD wget --no-verbose --tries=1 --spider http://localhost:8000/health || exit 1
+  CMD wget --no-verbose --tries=1 --spider http://localhost:8082/api/events/health || exit 1
 
 # Run the application
 ENTRYPOINT [ "sh", "-c", "java $JAVA_OPTS -jar app.jar" ]

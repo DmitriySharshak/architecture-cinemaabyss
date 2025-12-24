@@ -13,7 +13,7 @@ System_Boundary(system, "Система Кинобездна") {
   Container(movie_service, "Сервис каталога фильмов", "Java", "Управление фильмами и стриминг")
   Container(partner_service, "Сервис для партнеров", "Java", "Интеграция с партнерскими приложениями")
   Container(pay_service, "Сервис управления платежами", "Java", "Интеграция с платёжной системой")
-  Container(recommend_service, "Сервис подборки фильмов (MVP)", "Java", "MVP подборки фильмов") #Green
+  Container(events_service, "Сервис обработки сообщений (MVP)", "Java", "Асинхронная обработка сообщений") #Green
   Container(monolith, "Остатки монолита", "Go", "Система с монолитной архитектурой") #Brown
   Container(mb_rabbitmq, "Брокер сообщений", "RabbitMQ", "Передача событий") #Brown
   Container(mb_kafka, "Брокер сообщений", "Kafka", "Передача событий") #Green
@@ -34,21 +34,24 @@ Rel(sales_manager, api_gw, "Просматривает данные систем
 Rel(api_gw, auth_service, "Auth")
 Rel(api_gw, user_service, "CRUD пользователей")
 Rel(api_gw, movie_service, "CRUD и стриминг фильмов")
-Rel(api_gw, partner_service, "Обмен данных с партнерами")
-Rel(api_gw, pay_service, "Обработка платежа")
-Rel(api_gw, recommend_service, "Сервис подборки фильмов")
-Rel(api_gw, monolith, "Неперенесенные операции")
-Rel(recommend_service, mb_kafka, "sa")
+Rel(api_gw, partner_service, "Обменяться данными с партнером")
+Rel(api_gw, pay_service, "Обработать платеж")
+Rel(api_gw, events_service, "Обработать сообщение")
+Rel(api_gw, monolith, "Запросы для оставшихся операций")
+Rel(events_service, mb_kafka, "Запросить подборку фильмов")
 
 Rel(auth_service, db_auth, "Auth user")
 Rel(user_service, db_users, "CRUD users")
 Rel(movie_service, db_movies, "CRUD movies")
 Rel(movie_service, db_s3, "Stream movies")
-Rel(monolith, db_monolith, "CRUD operations")
+Rel(monolith, db_monolith, "CRUD operations all")
 
 Rel(partner_service, partner_sys, "API интеграции с партнерами")
 Rel(pay_service, pay_sys, "Обработка платежей")
-Rel(monolith, mb_rabbitmq, "Получение подборки фильмов")
-Rel(mb_rabbitmq, recommend_sys, "Получение подборки фильмов")
+Rel(monolith, mb_rabbitmq, "Получить подборки фильмов")
+Rel(mb_kafka, recommend_sys, "Запросить подборку фильмов")
+Rel(recommend_sys, mb_kafka, "Отправить подборку фильмов")
+Rel(mb_kafka, events_service, "Отправить подборку фильмов")
+Rel(mb_rabbitmq, recommend_sys, "Получить подборку фильмов")
 
 @enduml
