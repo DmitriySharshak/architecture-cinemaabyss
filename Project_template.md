@@ -29,7 +29,7 @@
 
 Необходимые тесты для проверки этого API вызываются при запуске npm run test:local из папки tests/postman 
 Cкриншот тестов и скриншот состояния топиков Kafka из UI http://localhost:8090
-[скриншоты](./screenshots/events)
+[скриншоты](./screenshots/events/task2)
 
 # Задание 3
 
@@ -178,7 +178,8 @@ cat .docker/config.json | base64
   ```
 
 #### Шаг 3
-Добавьте сюда скриншота вывода при вызове https://cinemaabyss.example.com/api/movies и  скриншот вывода event-service после вызова тестов.
+скриншот вывода при вызове https://cinemaabyss.example.com/api/movies и скриншот вывода event-service после вызова тестов.
+[скриншоты](./screenshots/events/task3)
 
 
 # Задание 4
@@ -239,3 +240,4 @@ https://cinemaabyss.example.com/api/movies
 kubectl delete all --all -n cinemaabyss
 kubectl delete namespace cinemaabyss
 ```
+[скриншоты](./screenshots/events/task4)
