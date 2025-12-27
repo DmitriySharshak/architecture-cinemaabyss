@@ -8,16 +8,46 @@ WORKDIR /app
 COPY .mvn/ .mvn/
 COPY mvnw pom.xml ./
 
+# Install curl for retry logic
+RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
+
+# Function to retry Maven commands with exponential backoff and fallback to standard Maven
+RUN echo '#!/bin/bash' > /usr/local/bin/mvnw-retry.sh && \
+    echo 'set -e' >> /usr/local/bin/mvnw-retry.sh && \
+    echo 'MAX_RETRIES=3' >> /usr/local/bin/mvnw-retry.sh && \
+    echo 'RETRY_DELAY=5' >> /usr/local/bin/mvnw-retry.sh && \
+    echo 'for i in $(seq 1 $MAX_RETRIES); do' >> /usr/local/bin/mvnw-retry.sh && \
+    echo '  if ./mvnw "$@"; then' >> /usr/local/bin/mvnw-retry.sh && \
+    echo '    exit 0' >> /usr/local/bin/mvnw-retry.sh && \
+    echo '  fi' >> /usr/local/bin/mvnw-retry.sh && \
+    echo '  if [ $i -lt $MAX_RETRIES ]; then' >> /usr/local/bin/mvnw-retry.sh && \
+    echo '    echo "Attempt $i failed, retrying in ${RETRY_DELAY}s..."' >> /usr/local/bin/mvnw-retry.sh && \
+    echo '    sleep $RETRY_DELAY' >> /usr/local/bin/mvnw-retry.sh && \
+    echo '    RETRY_DELAY=$((RETRY_DELAY * 2))' >> /usr/local/bin/mvnw-retry.sh && \
+    echo '  fi' >> /usr/local/bin/mvnw-retry.sh && \
+    echo 'done' >> /usr/local/bin/mvnw-retry.sh && \
+    echo 'echo "Maven wrapper failed, trying standard Maven..."' >> /usr/local/bin/mvnw-retry.sh && \
+    echo 'if command -v mvn >/dev/null 2>&1; then' >> /usr/local/bin/mvnw-retry.sh && \
+    echo '  echo "Using standard Maven installation"' >> /usr/local/bin/mvnw-retry.sh && \
+    echo '  mvn "$@"' >> /usr/local/bin/mvnw-retry.sh && \
+    echo 'else' >> /usr/local/bin/mvnw-retry.sh && \
+    echo '  echo "Installing Maven..."' >> /usr/local/bin/mvnw-retry.sh && \
+    echo '  apt-get update && apt-get install -y maven && rm -rf /var/lib/apt/lists/*' >> /usr/local/bin/mvnw-retry.sh && \
+    echo '  mvn "$@"' >> /usr/local/bin/mvnw-retry.sh && \
+    echo 'fi' >> /usr/local/bin/mvnw-retry.sh && \
+    chmod +x /usr/local/bin/mvnw-retry.sh
+
 # Download dependencies and cache them (will be cached by Docker if pom.xml doesn't change)
+# Use retry mechanism to handle network issues
 RUN --mount=type=cache,target=/root/.m2 \
-    ./mvnw dependency:go-offline -B
+    /usr/local/bin/mvnw-retry.sh dependency:go-offline -B
 
 # Copy source code after dependencies to leverage build caching
 COPY src/ ./src/
 
 # Build the application
 RUN --mount=type=cache,target=/root/.m2 \
-    ./mvnw package -DskipTests -B
+    /usr/local/bin/mvnw-retry.sh package -DskipTests -B
 
 # Stage 2: Create runtime image
 FROM eclipse-temurin:21-alpine
