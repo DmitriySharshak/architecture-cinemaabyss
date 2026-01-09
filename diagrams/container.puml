@@ -1,0 +1,129 @@
+@startuml 
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+
+title Диаграмма контейнеров системы "Кинобездна" (To-Be архитектура)
+
+Person(user, "Пользователь", "Просмотр фильмов на различных устройствах")
+
+System_Boundary(c1, "Система 'Кинобездна'") {
+    
+    ' ====================
+    ' Уровень клиентов
+    ' ====================
+    Container(spa, "Веб-клиент", "TypeScript", "SPA приложение на React")
+    Container(mobile_app, "Мобильное приложение", "React Native", "Приложение для iOS и Android")
+    Container(tv_app, "TV приложение", "React/TV OS", "Приложение для Smart TV")
+    
+    ' ====================
+    ' API Gateway
+    ' ====================
+    Container(gateway, "API Gateway", "Go", "Единая точка входа, маршрутизация, аутентификация")
+    
+    ' ====================
+    ' Сервисы (Domain Services)
+    ' ====================
+    Container(profile_service, "Сервис пользователей", "Go", "Управление профилями, аутентификация, авторизация")
+    ContainerDb(profile_db, "База пользователей", "PostgreSQL", "Хранит данные пользователей, роли, настройки")
+    
+    Container(catalog_service, "Сервис каталога", "Go", "Управление метаданными фильмов, поиск, фильтрация")
+    ContainerDb(catalog_db, "База каталога", "PostgreSQL", "Фильмы, актеры, жанры, оценки и т.д")
+    
+    Container(subscription_service, "Сервис подписок", "Go", "Управление подписками, тарифами, счетами")
+    ContainerDb(subscription_db, "База подписок", "PostgreSQL", "Подписки, тарифы, история изменений")
+    
+    Container(payment_service, "Сервис платежей", "Java", "Интеграция с платежными системами")
+    ContainerDb(payment_db, "База платежей", "PostgreSQL", "Транзакции, история платежей, идемпотентность")
+    
+    Container(playback_service, "Сервис просмотра", "Go", "Управление стримингом, токены доступа")
+    ContainerDb(playback_db, "База просмотров", "PostgreSQL", "История просмотров, прогресс, сессии")
+    
+    Container(recommendation_service, "Сервис рекомендаций", "Go", "Внутренняя рекомендательная система")
+    
+    Container(favorites_service, "Сервис избранного", "Go", "Управление списками избранного")
+    ContainerDb(favorites_db, "База избранного", "PostgreSQL", "Избранное, пользовательские коллекции")
+    
+    Container(promo_service, "Сервис скидок", "Go", "Промокоды, акции, программы лояльности")
+    
+    
+    ' ====================
+    ' Message Broker
+    ' ====================
+    Container(message_broker, "Message Broker", "Apache Kafka", "Асинхронная коммуникация, обработка событий", $tags="broker")
+    
+    ' ====================
+    ' Media Infrastructure
+    ' ====================
+    Container(media_server, "Сервис Media контента", "Nginx/Wowza", "Стриминг видео контента, транс coding")
+    Container(cdn, "CDN", "CDN Provider", "Доставка видео и статики")
+    
+    ' ====================
+    ' BFF Layer
+    ' ====================
+    Container(web_bff, "Web BFF", "Node.js/GraphQL", "Backend for Frontend для веб-клиента")
+    Container(mobile_bff, "Mobile BFF", "Node.js/GraphQL", "Backend for Frontend для мобильных приложений")
+    Container(tv_bff, "TV BFF", "Node.js/GraphQL", "Backend for Frontend для TV приложений")
+}
+
+' ====================
+' Внешние системы
+' ====================
+System_Ext(payment_systems, "Платежные системы", "Сторонние платежные шлюзы")
+System_Ext(loyalty_systems, "Системы лояльности", "Интеграции с маркетплейсами и партнерами")
+System_Ext(external_recommendations, "Внешняя рекомендательная система", "Сторонний сервис рекомендаций")
+
+
+' ====================
+' Отношения между контейнерами
+' ====================
+
+' Клиенты -> Gateway/BFF
+Rel(user, spa, "Просмотр через браузер", "HTTPS")
+Rel(user, mobile_app, "Просмотр на мобильном", "HTTPS")
+Rel(user, tv_app, "Просмотр на Smart TV", "HTTPS")
+Rel(spa, gateway, "API запросы", "HTTPS/gRPC")
+Rel(mobile_app, gateway, "API запросы", "HTTPS/gRPC")
+Rel(tv_app, gateway, "API запросы", "HTTPS/gRPC")
+
+' Gateway -> BFF
+Rel(gateway, web_bff, "Маршрутизация веб-запросов", "HTTP/2")
+Rel(gateway, mobile_bff, "Маршрутизация мобильных запросов", "HTTP/2")
+Rel(gateway, tv_bff, "Маршрутизация TV запросов", "HTTP/2")
+
+' BFF -> Сервисы (синхронные вызовы)
+Rel(web_bff, profile_service, "Запрос данных пользователя", "gRPC")
+Rel(web_bff, catalog_service, "Получение каталога", "gRPC")
+Rel(web_bff, subscription_service, "Проверка подписки", "gRPC")
+Rel(web_bff, favorites_service, "Управление избранным", "gRPC")
+Rel(mobile_bff, catalog_service, "Оптимизированные запросы", "gRPC")
+Rel(tv_bff, playback_service, "Управление просмотром", "gRPC")
+
+' Синхронные взаимодействия между сервисами
+Rel(profile_service, profile_db, "Чтение/запись", "SQL")
+Rel(catalog_service, catalog_db, "Чтение/запись", "SQL")
+Rel(subscription_service, subscription_db, "Чтение/запись", "SQL")
+Rel(payment_service, payment_db, "Чтение/запись", "SQL")
+Rel(playback_service, playback_db, "Чтение/запись", "SQL")
+Rel(favorites_service, favorites_db, "Чтение/запись", "SQL")
+
+' Бизнес-процессы (синхронные цепочки)
+Rel(subscription_service, payment_service, "Инициация платежа", "gRPC")
+Rel(payment_service, payment_systems, "Выполнение платежа", "HTTPS (webhook)")
+Rel(playback_service, media_server, "Запрос стрима", "RTMP/HLS")
+Rel(media_server, cdn, "Распределение контента", "CDN Protocol")
+
+' Асинхронные взаимодействия (через брокер)
+Rel(profile_service, message_broker, "Публикует: user.registered", "Kafka Protocol")
+Rel(payment_service, message_broker, "Публикует: payment.completed", "Kafka Protocol")
+Rel(catalog_service, message_broker, "Публикует: content.updated", "Kafka Protocol")
+Rel(playback_service, message_broker, "Публикует: playback.started", "Kafka Protocol")
+
+Rel(message_broker, subscription_service, "Подписывается: payment.completed", "Kafka Protocol")
+Rel(message_broker, recommendation_service, "Подписывается: пользовательские действия", "Kafka Protocol")
+Rel(message_broker, promo_service, "Подписывается: user.registered", "Kafka Protocol")
+
+' Внешние интеграции
+Rel(gateway, external_recommendations, "Запрос рекомендаций", "HTTPS/gRPC")
+Rel(promo_service, loyalty_systems, "Проверка промо-условий", "HTTPS")
+
+@enduml
