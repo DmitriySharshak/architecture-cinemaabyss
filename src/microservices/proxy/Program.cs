@@ -48,7 +48,16 @@ namespace proxy
                     ClusterId = "movies-cluster",
                     Match = new RouteMatch
                     {
-                        Path = "/api/{**catch-all}"
+                        Path = "/api/movies/{**catch-all}"
+                    }
+                },
+                new RouteConfig
+                {
+                    RouteId   = "monolit-route",
+                    ClusterId = "monolit-cluster",
+                    Match = new RouteMatch
+                    {
+                        Path = "/api/users/{**catch-all}"
                     }
                 }
             };
@@ -98,6 +107,17 @@ namespace proxy
                     ClusterId           = "movies-cluster",
                     LoadBalancingPolicy = LoadBalancingPolicies.PowerOfTwoChoices,
                     Destinations        = destinations
+                },
+                new ClusterConfig
+                {
+                    ClusterId           = "monolit-cluster",
+                    Destinations        = new Dictionary<string, DestinationConfig>
+                    {
+                        ["monolite-service"] = new()
+                        {
+                            Address = monolitAddress
+                        }
+                    }
                 }
             };
 
