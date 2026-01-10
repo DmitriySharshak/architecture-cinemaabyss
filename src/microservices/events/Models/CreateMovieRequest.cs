@@ -14,5 +14,10 @@ namespace events.Models
         public long UserId { get; set; }
         //public double Rating { get; set; }
         //public string[] Genres { get; set; }
+
+        public override string ToString()
+        {
+            return $"[movie_id={this.MovieId}, title={this.Title}, action={this.Action}, user_id={this.UserId}]";
+        }
     }
 }

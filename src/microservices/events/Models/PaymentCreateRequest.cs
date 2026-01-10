@@ -20,5 +20,9 @@ namespace events.Models
 
         public DateTimeOffset Timestamp { get; set; }
 
+        public override string ToString()
+        {
+            return $"[payment_id={this.PaymentId}, user_id={this.UserId}, amount={this.Amount}, status={this.Status}, method_type={this.MethodType}, timestamp={this.Timestamp}]";
+        }
     }
 }

@@ -16,5 +16,10 @@ namespace events.Models
 
         public DateTimeOffset Timestamp { get; set; }
 
+        public override string ToString()
+        {
+            return $"[user_id={this.UserId}, userName={this.UserName}, email={this.Email}, action={this.Action}, timestamp={this.Timestamp}]";
+        }
+
     }
 }

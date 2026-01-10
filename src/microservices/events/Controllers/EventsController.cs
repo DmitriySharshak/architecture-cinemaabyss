@@ -39,19 +39,6 @@ namespace events.Controllers
 
                 _publishService.Send("movie-events", request);
 
-                //if (deliveryReport is null)
-                //{
-                //    _logger.LogInformation($"deliveryReport: {deliveryReport}");
-                //}
-                //_logger.LogInformation($"Send to kafka: {deliveryReport}");
-
-                //var response = new BaseResponse()
-                //{
-                //    Partition = deliveryReport.Partition.Value,
-                //    Offset    = deliveryReport.Offset.Value,
-                //    Status = deliveryReport.Status.ToString()
-                //};
-
                 return StatusCode(StatusCodes.Status201Created, new ApiResponse<BaseResponse>
                 {
                     Status     = "success",

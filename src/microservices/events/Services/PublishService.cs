@@ -32,7 +32,7 @@ namespace events.Services
             _producer = builder.Build();
         }
 
-        public DeliveryReport<byte[], byte[]> Send<T>(string channelName, T value)
+        public void Send<T>(string channelName, T value)
         {
             string jsonOutput = JsonConvert.SerializeObject(value);
             var    result     = Encoding.UTF8.GetBytes(jsonOutput);
@@ -43,7 +43,10 @@ namespace events.Services
                 Headers = new Headers()
             };
 
-            return this._producer.ProduceAsync(channelName, msg).ConfigureAwait(false).GetAwaiter().GetResult() as DeliveryReport<byte[], byte[]>;
+            _producer.Produce(channelName, msg, (deliveryReport) =>
+            {
+                _logger.LogInformation($"Событие успешно создано: topic={channelName} | partition={deliveryReport.Partition.Value} | offset={deliveryReport.Offset.Value} | data={value}");
+            });
         }
 
         public void Dispose()
