@@ -61,7 +61,7 @@
 [Cкриншот тестов. Часть 3](out/screen-test-3.png)\
 [Cкриншот состояния топика movie-events](out/topic-movie-events.png)\
 [Cкриншот состояния топика payment-events](out/topic-payment-events.png)\
-[Cкриншот состояния топика user-events](out/topic-user-events.png)\
+[Cкриншот состояния топика user-events](out/topic-user-events.png)
 
 
 # Задание 3
@@ -114,7 +114,7 @@ jobs:
 Как только сборка отработает и в github registry появятся ваши образы, можно переходить к блоку настройки Kubernetes
 Успешным результатом данного шага является "зеленая" сборка и "зеленые" тесты
 
-[Cкриншот усапешной сборки и тестов](out/Workflow%20runs.png)\
+[Cкриншот усапешной сборки и тестов](out/Workflow%20runs.png)
 
 
 ### Proxy в Kubernetes
