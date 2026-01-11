@@ -112,6 +112,16 @@ namespace events.Controllers
             {
                 if (!ModelState.IsValid)
                 {
+                    // Логируем ошибки валидации
+                    var errors = ModelState
+                        .Where(ms => ms.Value.Errors.Any())
+                        .ToDictionary(
+                            kvp => kvp.Key,
+                            kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToArray()
+                        );
+
+                    _logger.LogWarning("BadRequest: {@Errors}", errors);
+
                     return BadRequest(new ApiResponse
                     {
                         Status     = "error",

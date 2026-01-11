@@ -45,7 +45,7 @@ namespace events.Services
 
             _producer.Produce(channelName, msg, (deliveryReport) =>
             {
-                _logger.LogInformation($"Событие успешно создано: topic={channelName} | partition={deliveryReport.Partition.Value} | offset={deliveryReport.Offset.Value} | data={value}");
+                _logger.LogInformation($"Событие успешно обработано: topic={channelName} | partition={deliveryReport.Partition.Value} | offset={deliveryReport.Offset.Value} | data={value}");
             });
         }
 
