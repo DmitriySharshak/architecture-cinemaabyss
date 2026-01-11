@@ -29,8 +29,9 @@ namespace events
             var app = builder.Build();
 
             app.UseAuthorization();
+            app.UseMiddleware<BadRequestLoggingMiddleware>();
             app.MapControllers();
-
+            
             // Настраиваем маршруты
             app.MapHealthChecks("api/events/health", new HealthCheckOptions
             {

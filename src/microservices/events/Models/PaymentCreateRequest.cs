@@ -6,19 +6,19 @@ namespace events.Models
     {
 
         [JsonPropertyName("payment_id")]
-        public long PaymentId { get; set; }
+        public long? PaymentId { get; set; }
 
         [JsonPropertyName("user_id")]
-        public long UserId { get; set; }
+        public long? UserId { get; set; }
 
-        public double Amount { get; set; }
+        public double? Amount { get; set; }
 
-        public string Status { get; set; }
+        public string? Status { get; set; }
 
         [JsonPropertyName("method_type")]
-        public string MethodType { get; set; }
+        public string? MethodType { get; set; }
 
-        public DateTimeOffset Timestamp { get; set; }
+        public DateTimeOffset? Timestamp { get; set; }
 
         public override string ToString()
         {
