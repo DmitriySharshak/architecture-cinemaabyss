@@ -29,7 +29,7 @@ namespace events
             var app = builder.Build();
 
             app.UseAuthorization();
-            app.UseMiddleware<BadRequestLoggingMiddleware>();
+            
             app.MapControllers();
             
             // Настраиваем маршруты
@@ -47,6 +47,7 @@ namespace events
                 }
             });
 
+            //app.UseMiddleware<BadRequestLoggingMiddleware>();
             app.Run();
         }
     }
