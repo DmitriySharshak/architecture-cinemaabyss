@@ -50,12 +50,12 @@ spec:
         readinessProbe:
           exec:
             command: ["pg_isready", "-U", "postgres"]
-          initialDelaySeconds: 5
+          initialDelaySeconds: 30
           periodSeconds: 10
         livenessProbe:
           exec:
             command: ["pg_isready", "-U", "postgres"]
-          initialDelaySeconds: 30
+          initialDelaySeconds: 60
           periodSeconds: 20
       volumes:
       - name: postgres-init-scripts
