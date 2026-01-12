@@ -2,10 +2,7 @@
 
 # Задание 1
 
-1. Спроектируйте to be архитектуру КиноБездны, разделив всю систему на отдельные домены и организовав интеграционное взаимодействие и единую точку вызова сервисов.
-Результат представьте в виде контейнерной диаграммы в нотации С4.
-Добавьте ссылку на файл в этот шаблон
-[ссылка на файл](ссылка)
+[Диаграмма контейнеров](out/container.png)
 
 # Задание 2
 
@@ -59,6 +56,14 @@
 Необходимые тесты для проверки этого API вызываются при запуске npm run test:local из папки tests/postman 
 Приложите скриншот тестов и скриншот состояния топиков Kafka из UI http://localhost:8090 
 
+[Cкриншот тестов. Часть 1](out/screen-test-1.png)\
+[Cкриншот тестов. Часть 2](out/screen-test-2.png)\
+[Cкриншот тестов. Часть 3](out/screen-test-3.png)\
+[Cкриншот состояния топика movie-events](out/topic-movie-events.png)\
+[Cкриншот состояния топика payment-events](out/topic-payment-events.png)\
+[Cкриншот состояния топика user-events](out/topic-user-events.png)
+
+
 # Задание 3
 
 Команда начала переезд в Kubernetes для лучшего масштабирования и повышения надежности. 
@@ -108,6 +113,8 @@ jobs:
 ```
 Как только сборка отработает и в github registry появятся ваши образы, можно переходить к блоку настройки Kubernetes
 Успешным результатом данного шага является "зеленая" сборка и "зеленые" тесты
+
+[Cкриншот успешной сборки и тестов](out/Workflow%20runs.png)
 
 
 ### Proxy в Kubernetes
@@ -275,6 +282,9 @@ cat .docker/config.json | base64
 #### Шаг 3
 Добавьте сюда скриншота вывода при вызове https://cinemaabyss.example.com/api/movies и  скриншот вывода event-service после вызова тестов.
 
+[Cкриншот вызова http://cinemaabyss.example.com/api/movies](out/cinemaabyss.example.com_api_movies.png)\
+[Cкриншот вывода event-service](out/Kubernetes_Dashboard.png)
+
 
 # Задание 4
 Для простоты дальнейшего обновления и развертывания вам как архитектуру необходимо так же реализовать helm-чарты для прокси-сервиса и проверить работу 
@@ -350,6 +360,8 @@ minikube tunnel
 https://cinemaabyss.example.com/api/movies
 и приложите скриншот развертывания helm и вывода https://cinemaabyss.example.com/api/movies
 
+[Cкриншот развертывания helm](out/helm.png)\
+[Cкриншот успешной сборки и тестов](out/cinemaabyss.example.com_api_movies_2.png)
 ## Удаляем все
 
 ```bash

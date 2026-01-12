@@ -15,10 +15,11 @@ services:
       - postgres-data:/var/lib/postgresql/data
       - ./src/database/init.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      test: ["CMD-SHELL", "pg_isready -U postgres"] # Проверка готовности БД
+      interval: 5s      # Проверять каждые 5 секунд
+      timeout: 3s       # Ждать ответа 3 секунд
+      retries: 5        # 5 попыток до объявления unhealthy
+      start_period: 5s  # Дать 5 секунд на старт перед проверками
     networks:
       - cinemaabyss-network
 
@@ -57,7 +58,8 @@ services:
       dockerfile: Dockerfile
     container_name: cinemaabyss-monolith
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy # Ждать пока postgres не станет "healthy"
     ports:
       - "8080:8080"
     environment:
@@ -73,7 +75,8 @@ services:
       dockerfile: Dockerfile
     container_name: cinemaabyss-movies-service
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy # Ждать пока postgres не станет "healthy"
     ports:
       - "8081:8081"
     environment:
@@ -89,12 +92,14 @@ services:
       dockerfile: Dockerfile
     container_name: cinemaabyss-events-service
     depends_on:
-      - postgres
-      - kafka
+      postgres:
+        condition: service_healthy # Ждать пока postgres не станет "healthy" 
+      kafka:
+        condition: service_started 
     ports:
       - "8082:8082"
     environment:
-      PORT: 8082
+      ASPNETCORE_URLS: "http://+:8082"
       KAFKA_BROKERS: kafka:9092
     networks:
       - cinemaabyss-network
@@ -108,16 +113,22 @@ services:
     depends_on:
       - monolith
       - movies-service
-      - events-service
+      #- events-service
     ports:
       - "8000:8000"
     environment:
-      PORT: 8000
+      ASPNETCORE_URLS: "http://+:8000"
       MONOLITH_URL: http://monolith:8080
       MOVIES_SERVICE_URL: http://movies-service:8081
       EVENTS_SERVICE_URL: http://events-service:8082
       GRADUAL_MIGRATION: "true"
-      MOVIES_MIGRATION_PERCENT: "50"
+      MOVIES_MIGRATION_PERCENT: "80"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 5s      # Проверять каждые 5 секунд
+      timeout: 3s       # Ждать ответа 3 секунд
+      retries: 5        # 5 попыток до объявления unhealthy
+      start_period: 5s  # Дать 5 секунд на старт перед проверками
     networks:
       - cinemaabyss-network
 
